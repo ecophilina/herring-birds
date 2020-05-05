@@ -25,6 +25,8 @@
 knitr-cache
 *.html
 *.rds
+*.xlsx
+*.xls
 .Rbuildignore
 resources/
 #raw/
