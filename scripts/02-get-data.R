@@ -60,7 +60,7 @@ old_surv_all[old_surv_all$Location == "1565", ]$Location <- "1565 East Bay Rd"
 old_surv_all <- left_join(old_surv_all, coords, by = c("Location" = "Name"))
 
 glimpse(old_surv_all)
-View(old_surv_all)
+# View(old_surv_all)
 
 old_surv_all$Survey <- old_surv_all$`Survey#`
 
@@ -91,7 +91,7 @@ old_dat <- old_surv_all %>%
 
 old_dat$Date <- ymd(old_dat$Date)
 
-best_coords <- old_dat %>% select(site, easting, northing)
+best_coords <- old_dat %>% select(site, easting, northing, LengthM, SWidthM, AreaM2)
 
 
 # rename variables and select relevant variables
@@ -150,7 +150,6 @@ new_herring <- new_herring %>% rename(
     year = Year, month = Month, day = Day, 
     site = Location
   )
-new_herring$Date <- ymd(new_herring$Date)
 
 # Need to read methods doc... if it doesn't provide, ask...
 # 
@@ -158,5 +157,7 @@ new_herring$Date <- ymd(new_herring$Date)
 # can we convert herring comments into categorical variable of somekind?
 
 all_dat <- left_join(dat, new_herring, by = c("year", "month", "day", "site"))
+
+# View(all_dat)
  
 saveRDS(all_dat, "data/bird-survey-data.rds")
