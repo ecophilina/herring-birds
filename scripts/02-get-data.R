@@ -57,7 +57,7 @@ old_surv_all[old_surv_all$Location == "1565", ]$Location <- "1565 East Bay Rd"
 # coords$Name <- trimws(coords$Name)
 
 
-old_surv_all <- left_join(old_surv_all, coords, by = c("Location" = "Name"))
+old_surv_all <- left_join(old_surv_all, coords, by = c("Location" = "Name")) 
 
 glimpse(old_surv_all)
 # View(old_surv_all)
@@ -82,27 +82,24 @@ old_dat <- old_surv_all %>%
   mutate(period = 1, Date = paste(Year, Month, Day, sep = "-")) %>% 
   rename(year = Year, month = Month, day = Day, 
     site = Location, survey = Survey) %>%
-  select(period, year, month, day, 
+  select(
     SpeciesID, SPCount, 
-    site, easting, northing, #Mid_lat, Mid_lon, 
-    survey,
+    period, survey, year, month, day, 
     Date,
-    LengthM, SWidthM, AreaM2)
+    site, easting, northing, #Mid_lat, Mid_lon, 
+    AreaM2, LengthM, SWidthM)
 
 old_dat$Date <- ymd(old_dat$Date)
 
-best_coords <- old_dat %>% select(site, easting, northing, LengthM, SWidthM, AreaM2)
+best_coords <- old_dat %>% 
+  select(site, easting, northing, LengthM, SWidthM, AreaM2) %>% unique()
 
 
 # rename variables and select relevant variables
 new_dat <- new_surv %>% mutate(period = 2,
   year = year(ymd(Date)), month = month(ymd(Date)), day = day(ymd(Date)), 
   hour = hour(ymd_hms(`Start time`))
-  ) %>% rename(site = Site, survey = Survey) %>% select(
-    period, year, month, day, hour,
-    SpeciesID, SPCount, 
-    site, survey,
-    Date, Behaviour, Comments, SPAWN_CATEGORY) 
+  ) %>% rename(site = Site, survey = Survey, spawn_stage = SPAWN_CATEGORY) 
 
 new_dat$Date <- ymd(new_dat$Date)
 
@@ -110,7 +107,12 @@ new_dat[new_dat$SPCount == "500+", ]$Comments <- "500+"
 new_dat[new_dat$SPCount == "500+", ]$SPCount <- 500
 new_dat$SPCount <- as.numeric(new_dat$SPCount)
 
-new_dat <- left_join(new_dat, best_coords)
+new_dat_coords <- left_join(new_dat, best_coords) %>% unique() %>% 
+  select(
+    SpeciesID, SPCount, 
+    period, survey, year, month, day, hour, Date,
+    site, easting, northing, AreaM2, LengthM, SWidthM,
+    spawn_stage, Behaviour, Comments) 
 
 # View(old_dat)
 # View(new_dat)
@@ -118,37 +120,41 @@ new_dat <- left_join(new_dat, best_coords)
 # sort(unique(old_dat$site))
 # sort(unique(new_dat$site))
 
-dat <- bind_rows(old_dat, new_dat)
+dat <- bind_rows(old_dat, new_dat_coords) 
 
 View(dat)
 
 ### add in herring observations from 
-new_herring <- readxl::read_excel(
+new_meta <- readxl::read_excel(
   "raw/Coastal_Waterbird_Herring_Counts_2015&2016_5Feb2017.xlsx",
   sheet = "Survey_Summary"
 )
-# unique(new_herring$Surveyor)
-new_herring <- new_herring %>% select(Location, Event, Year, Month, Day, StartHR, StartMIN, ENDHR, ENDMIN, `General visibility`, Vis_comment, Precip, WindSpeed, Tide, Disturbance, Boats, `Herring comments`, Comments )
+# unique(new_meta$Surveyor)
+new_meta <- new_meta %>% select(
+  Location, Event, Year, Month, Day, StartHR, StartMIN, ENDHR, ENDMIN, 
+  `General visibility`, Vis_comment, Precip, WindSpeed, Tide, 
+  Disturbance, Boats, `Herring comments`, Comments 
+  )
 
 
-# View(new_herring)
-# glimpse(new_herring)
+# View(new_meta)
+# glimpse(new_meta)
 
-new_herring[new_herring$Location == "Campbell River (50th Parallel)", ]$Location <- "Campbell River 50th Parallel"
-new_herring[new_herring$Location == "Comox", ]$Location <- "Goose Spit"
-new_herring[new_herring$Location == "Nanaimo Harbor", ]$Location <- "Nanaimo Harbour"
-new_herring[new_herring$Location == "Oyster Bay", ]$Location <- "Oyster River"
-new_herring[new_herring$Location == "Parksville", ]$Location <- "Parksville Bay"
-new_herring[new_herring$Location == "Piper's Lagoon", ]$Location <- "Piper's Bay"
-new_herring[new_herring$Location == "Snaw-naw-as Campground", ]$Location <- "Snaw-naw-as"
+new_meta[new_meta$Location == "Campbell River (50th Parallel)", ]$Location <- "Campbell River 50th Parallel"
+new_meta[new_meta$Location == "Comox", ]$Location <- "Goose Spit"
+new_meta[new_meta$Location == "Nanaimo Harbor", ]$Location <- "Nanaimo Harbour"
+new_meta[new_meta$Location == "Oyster Bay", ]$Location <- "Oyster River"
+new_meta[new_meta$Location == "Parksville", ]$Location <- "Parksville Bay"
+new_meta[new_meta$Location == "Piper's Lagoon", ]$Location <- "Piper's Bay"
+new_meta[new_meta$Location == "Snaw-naw-as Campground", ]$Location <- "Snaw-naw-as"
 
-sort(unique(new_herring$Location))
+sort(unique(new_meta$Location))
 sort(unique(dat$site))
 
 
-new_herring <- new_herring %>% rename(
+new_meta2 <- new_meta %>% rename(
     year = Year, month = Month, day = Day, 
-    site = Location
+    site = Location, bird_notes = Comments
   )
 
 # Need to read methods doc... if it doesn't provide, ask...
@@ -156,7 +162,7 @@ new_herring <- new_herring %>% rename(
 # why so little duration data? Fixed length except when noted?
 # can we convert herring comments into categorical variable of somekind?
 
-all_dat <- left_join(dat, new_herring, by = c("year", "month", "day", "site"))
+all_dat <- left_join(dat, new_meta2, by = c("year", "month", "day", "site")) #%>% unique()
 
 # View(all_dat)
  
