@@ -39,6 +39,7 @@ dfodat <- rbind(dfodat, dfodatNN)
 dfodat <- dfodat %>%
   filter(Year %in% c(1998, 1999, 2015, 2016)) %>%
   rename(Lat = Latitude, Lon = Longitude)
+
 # plot(Lat~Lon, data = dfodat)
 
 
@@ -69,7 +70,8 @@ coords <- rbind(coords1, coords2, coords3, coords4)
 
 
 dfodat %>%
-  filter(Method == "Dive") %>%
+  # filter(Method == "Dive") %>%
+  filter(Year > 1995) %>%
   ggplot(aes(X, Y)) +
   geom_polygon(
     data = coast, aes_string(x = "X", y = "Y", group = "PID"),
@@ -77,8 +79,9 @@ dfodat %>%
   ) +
   geom_point(data = coords, aes(X, Y), colour = "red", shape = 21, size = 3, inherit.aes = F) +
   coord_cartesian(xlim = c(760, 885), ylim = c(5450, 5565), expand = F) +
-  # coord_cartesian(xlim = c(-125.3, -123.8), ylim = c(49.1, 50.1), expand = F) +
-  geom_point() + facet_wrap(~Year)
+  # coord_cartesian(xlim = c(-125.3, -123.8), ylim = c(49.1, 50.1), expand = F) + 
+  geom_point(aes(size = SpawnIndex, alpha = SpawnIndex)) +
+  facet_wrap(~Year)
 
 
 #######################

@@ -63,6 +63,29 @@ p <- filter(all_dat, group != "Rapter") %>%
   gfplot::theme_pbs()
 # ggsave("plots/group-violin-all-raw.pdf")
 
+
+(p <- filter(all_dat, group != "Rapter") %>%
+  ggplot(aes(as.factor(spawn_stage), SPCount, group = spawn_stage)) +
+  # ggplot(aes(as.factor(year), log(SPCount+1), group = period)) +
+  geom_violin() +
+  geom_jitter(aes(
+    colour = year, alpha = SPCount,
+    size = SPCount
+  ), # size =1,
+  # alpha = 0.1,
+  width = 0.25
+  ) +
+  scale_colour_viridis_c(end = 0.5) +
+  facet_wrap(~ as.factor(group), scales = "free_y") +
+  gfplot::theme_pbs())
+
+p
+# ggsave("plots/group-violin-all-raw.pdf")
+
+
+
+
+
 # (p + scale_y_continuous(trans = "log1p")) # log plus 1?
 # ggsave("plots/group-violin-all-log.pdf")
 
